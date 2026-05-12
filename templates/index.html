@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Dashboard AgroLink</title>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <link rel="stylesheet"
+        href="{{ url_for('static', filename='index.css') }}">
+</head>
+
+<body>
+
+<!-- SIDEBAR -->
+<div class="sidebar">
+
+    <h2>AgroLink</h2>
+
+    <a href="#">Dashboard</a>
+    <a href="/upload">Upload</a>
+    <a href="/logout">Sair</a>
+
+</div>
+
+<!-- MAIN -->
+<div class="main">
+
+    <!-- TOPO -->
+    <div class="topbar">
+
+        <h1>Dashboard</h1>
+
+        <a href="/logout" class="logout">
+            Sair
+        </a>
+
+    </div>
+
+    <!-- FILTROS -->
+    <div class="filtros">
+
+        <select id="produto"></select>
+
+        <select id="produtor"></select>
+
+        <select id="localidade"></select>
+
+        <select id="mes"></select>
+
+        <select id="ano"></select>
+
+    </div>
+
+    <!-- CARDS -->
+    <div class="cards">
+
+        <div class="card">
+            <h3 id="total"></h3>
+            <p>Produção Total</p>
+        </div>
+
+        <div class="card">
+            <h3 id="faturamento"></h3>
+            <p>Faturamento</p>
+        </div>
+
+    </div>
+
+    <!-- GRÁFICOS -->
+    <div class="graficos">
+
+        <!-- BARRAS -->
+        <div class="grafico-box">
+            <h4>Produção por Produto</h4>
+            <canvas id="graficoProdutos"></canvas>
+        </div>
+
+        <!-- PIZZA -->
+        <div class="grafico-box">
+            <h4>Participação por Produto</h4>
+            <canvas id="graficoPizza"></canvas>
+        </div>
+
+        <!-- LINHA -->
+        <div class="grafico-box">
+            <h4>Produção por Mês</h4>
+            <canvas id="graficoLinha"></canvas>
+        </div>
+
+        <!-- DOUGHNUT -->
+        <div class="grafico-box">
+            <h4>Produção por Localidade</h4>
+            <canvas id="graficoLocalidade"></canvas>
+        </div>
+
+    </div>
+
+    <!-- TABELA -->
+    <div class="table-box">
+
+        <!-- INFO -->
+        <div id="infoTabela"></div>
+
+        <!-- SCROLL -->
+        <div class="box-scroll">
+
+            <table>
+
+                <thead>
+
+                    <tr>
+                        <th>Produtor</th>
+                        <th>Produto</th>
+                        <th>Quantidade</th>
+                        <th>Localidade</th>
+                        <th>Mês</th>
+                    </tr>
+
+                </thead>
+
+                <tbody id="tabela"></tbody>
+
+            </table>
+
+        </div>
+
+        <!-- PAGINAÇÃO -->
+        <div class="paginacao">
+
+            <button onclick="anterior()">
+                ◀ Anterior
+            </button>
+
+            <span id="paginaInfo"></span>
+
+            <button onclick="proximo()">
+                Próximo ▶
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+
+// ===============================
+// DADOS
+// ===============================
+const dados = {{ dados | tojson }};
+let filtrado = [...dados];
+
+// ===============================
+// PAGINAÇÃO
+// ===============================
+let pagina = 0;
+const LIMITE = 100;
+
+// ===============================
+// FILTROS
+// ===============================
+function criarFiltro(id, campo) {
+
+    const select = document.getElementById(id);
+
+    const valores = [
+        ...new Set(
+            dados
+            .map(d => d[campo])
+            .filter(v => v)
+        )
+    ];
+
+    const nomes = {
+        produto: "Todos os produtos",
+        produtor: "Todos os produtores",
+        localidade: "Todas localidades",
+        mes: "Todos os meses",
+        ano: "Todos os anos"
+    };
+
+    select.innerHTML =
+        `<option value="">${nomes[campo]}</option>`;
+
+    valores.sort().forEach(v => {
+
+        select.innerHTML += `
+            <option value="${v}">
+                ${v}
+            </option>
+        `;
+
+    });
+
+}
+
+criarFiltro("produto", "produto");
+criarFiltro("produtor", "produtor");
+criarFiltro("localidade", "localidade");
+criarFiltro("mes", "mes");
+criarFiltro("ano", "ano");
+
+// ===============================
+// EVENTOS FILTROS
+// ===============================
+document
+.querySelectorAll("select")
+.forEach(select => {
+
+    select.addEventListener(
+        "change",
+        aplicarFiltro
+    );
+
+});
+
+// ===============================
+// FILTRAR
+// ===============================
+function aplicarFiltro() {
+
+    filtrado = dados.filter(d => {
+
+        return (
+            (!produto.value || d.produto == produto.value) &&
+            (!produtor.value || d.produtor == produtor.value) &&
+            (!localidade.value || d.localidade == localidade.value) &&
+            (!mes.value || d.mes == mes.value) &&
+            (!ano.value || d.ano == ano.value)
+        );
+
+    });
+
+    pagina = 0;
+
+    atualizar();
+}
+
+// ===============================
+// CARDS
+// ===============================
+function atualizarCards() {
+
+    const total = filtrado.reduce(
+        (soma, d) =>
+            soma + (d.quantidade || 0),
+        0
+    );
+
+    const faturamento = filtrado.reduce(
+        (soma, d) =>
+            soma +
+            (
+                (d.quantidade || 0) *
+                (d.preco || 0)
+            ),
+        0
+    );
+
+    document
+    .getElementById("total")
+    .innerText = total.toLocaleString();
+
+    document
+    .getElementById("faturamento")
+    .innerText =
+        faturamento.toLocaleString(
+            "pt-BR",
+            {
+                style: "currency",
+                currency: "BRL"
+            }
+        );
+
+}
+
+// ===============================
+// GRÁFICOS
+// ===============================
+let chartBar;
+let chartPizza;
+let chartLinha;
+let chartLocalidade;
+
+// ===============================
+// MAPA AGRUPADO
+// ===============================
+function criarMapa(campo) {
+
+    const mapa = {};
+
+    filtrado.forEach(d => {
+
+        mapa[d[campo]] =
+            (mapa[d[campo]] || 0)
+            +
+            (d.quantidade || 0);
+
+    });
+
+    return mapa;
+}
+
+// ===============================
+// CORES
+// ===============================
+function gerarCores(qtd) {
+
+    const cores = [];
+
+    for (let i = 0; i < qtd; i++) {
+
+        const hue =
+            (i * 360 / qtd);
+
+        cores.push(
+            `hsl(${hue},70%,55%)`
+        );
+
+    }
+
+    return cores;
+}
+
+// ===============================
+// CRIAR GRÁFICOS
+// ===============================
+function graficoProdutos() {
+
+    // ===========================
+    // PRODUTOS
+    // ===========================
+    const produtos =
+        criarMapa("produto");
+
+    const labelsProdutos =
+        Object.keys(produtos);
+
+    const valoresProdutos =
+        Object.values(produtos);
+
+    const cores =
+        gerarCores(labelsProdutos.length);
+
+    // ===========================
+    // BARRAS
+    // ===========================
+    if (chartBar)
+        chartBar.destroy();
+
+    chartBar = new Chart(
+
+        document.getElementById(
+            "graficoProdutos"
+        ),
+
+        {
+            type: "bar",
+
+            data: {
+
+                labels: labelsProdutos,
+
+                datasets: [{
+                    label: "Quantidade",
+                    data: valoresProdutos,
+                    backgroundColor: cores,
+                    borderRadius: 8
+                }]
+            },
+
+            options: {
+                responsive: true,
+                maintainAspectRatio: false
+            }
+
+        }
+
+    );
+
+    // ===========================
+    // PIZZA
+    // ===========================
+    if (chartPizza)
+        chartPizza.destroy();
+
+    chartPizza = new Chart(
+
+        document.getElementById(
+            "graficoPizza"
+        ),
+
+        {
+            type: "pie",
+
+            data: {
+
+                labels: labelsProdutos,
+
+                datasets: [{
+                    data: valoresProdutos,
+                    backgroundColor: cores
+                }]
+            },
+
+            options: {
+                responsive: true,
+                maintainAspectRatio: false
+            }
+
+        }
+
+    );
+
+    // ===========================
+    // LINHA
+    // ===========================
+    const meses =
+        criarMapa("mes");
+
+    if (chartLinha)
+        chartLinha.destroy();
+
+    chartLinha = new Chart(
+
+        document.getElementById(
+            "graficoLinha"
+        ),
+
+        {
+            type: "line",
+
+            data: {
+
+                labels:
+                    Object.keys(meses),
+
+                datasets: [{
+                    label: "Produção",
+                    data:
+                        Object.values(meses),
+
+                    fill: false,
+                    tension: 0.3
+                }]
+            },
+
+            options: {
+                responsive: true,
+                maintainAspectRatio: false
+            }
+
+        }
+
+    );
+
+    // ===========================
+    // LOCALIDADE
+    // ===========================
+    const local =
+        criarMapa("localidade");
+
+    if (chartLocalidade)
+        chartLocalidade.destroy();
+
+    chartLocalidade = new Chart(
+
+        document.getElementById(
+            "graficoLocalidade"
+        ),
+
+        {
+            type: "doughnut",
+
+            data: {
+
+                labels:
+                    Object.keys(local),
+
+                datasets: [{
+                    data:
+                        Object.values(local),
+
+                    backgroundColor:
+                        gerarCores(
+                            Object.keys(local).length
+                        )
+                }]
+            },
+
+            options: {
+                responsive: true,
+                maintainAspectRatio: false
+            }
+
+        }
+
+    );
+
+}
+
+// ===============================
+// TABELA
+// ===============================
+function atualizarTabela() {
+
+    const tbody =
+        document.getElementById(
+            "tabela"
+        );
+
+    tbody.innerHTML = "";
+
+    const inicio =
+        pagina * LIMITE;
+
+    const fim =
+        inicio + LIMITE;
+
+    const paginaDados =
+        filtrado.slice(inicio, fim);
+
+    const fragment =
+        document.createDocumentFragment();
+
+    paginaDados.forEach(d => {
+
+        const tr =
+            document.createElement("tr");
+
+        tr.innerHTML = `
+            <td>${d.produtor || ""}</td>
+            <td>${d.produto || ""}</td>
+            <td>${d.quantidade || 0}</td>
+            <td>${d.localidade || ""}</td>
+            <td>${d.mes || ""}</td>
+        `;
+
+        fragment.appendChild(tr);
+
+    });
+
+    tbody.appendChild(fragment);
+
+    // INFO
+    const info =
+        document.getElementById(
+            "infoTabela"
+        );
+
+    if (filtrado.length === 0) {
+
+        info.innerText =
+            "Nenhum registro encontrado";
+
+    } else {
+
+        info.innerText =
+            `Mostrando ${inicio + 1}
+            até ${Math.min(fim, filtrado.length)}
+            de ${filtrado.length}`;
+
+    }
+
+    // PAGINAÇÃO
+    const totalPaginas =
+        Math.ceil(
+            filtrado.length / LIMITE
+        ) || 1;
+
+    document
+    .getElementById("paginaInfo")
+    .innerText =
+        `Página ${pagina + 1}
+        de ${totalPaginas}`;
+
+}
+
+// ===============================
+// CONTROLES
+// ===============================
+function proximo() {
+
+    if (
+        (pagina + 1) * LIMITE
+        <
+        filtrado.length
+    ) {
+
+        pagina++;
+
+        atualizar();
+
+    }
+
+}
+
+function anterior() {
+
+    if (pagina > 0) {
+
+        pagina--;
+
+        atualizar();
+
+    }
+
+}
+
+// ===============================
+// ATUALIZAR
+// ===============================
+function atualizar() {
+
+    atualizarCards();
+
+    graficoProdutos();
+
+    atualizarTabela();
+
+}
+
+// ===============================
+// INICIAR
+// ===============================
+atualizar();
+
+</script>
+
+</body>
+</html>

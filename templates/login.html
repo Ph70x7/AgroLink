@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login</title>
+
+    <style>
+        /* RESET */
+        *{
+            margin:0;
+            padding:0;
+            box-sizing:border-box;
+            font-family:'Segoe UI', Arial, sans-serif;
+        }
+
+        body{
+            height:100vh;
+            display:flex;
+            justify-content:center;
+            align-items:center;
+            background:url('https://i.postimg.cc/htvQyZ5B/Green-and-White-Modern-Agriculture-Presentation.png') no-repeat center center/cover;
+            overflow:hidden;
+            position:relative;
+        }
+
+        /* ESCURECER FUNDO */
+        body::before{
+            content:"";
+            position:absolute;
+            inset:0;
+            background:rgba(0,0,0,0.35);
+        }
+
+        /* CARD LOGIN */
+        .login-container{
+            position:relative;
+            z-index:1;
+
+            width:350px;
+            padding:40px 30px;
+
+            border-radius:20px;
+
+            background:rgba(255,255,255,0.08);
+            border:1px solid rgba(255,255,255,0.2);
+
+            backdrop-filter:blur(12px);
+            -webkit-backdrop-filter:blur(12px);
+
+            box-shadow:0 8px 32px rgba(0,0,0,0.3);
+
+            text-align:center;
+            color:white;
+        }
+
+        .login-container h2{
+            margin-bottom:25px;
+            font-size:34px;
+            font-weight:700;
+            color:#fff;
+        }
+
+        /* INPUTS */
+        .login-container input[type="text"],
+        .login-container input[type="password"]{
+            width:100%;
+            padding:14px 18px;
+            margin-bottom:18px;
+
+            border:none;
+            outline:none;
+
+            border-radius:30px;
+
+            background:rgba(255,255,255,0.12);
+            border:1px solid rgba(255,255,255,0.2);
+
+            color:white;
+            font-size:14px;
+
+            transition:0.3s;
+        }
+
+        .login-container input::placeholder{
+            color:#ddd;
+        }
+
+        .login-container input:focus{
+            border-color:rgba(255,255,255,0.5);
+            background:rgba(255,255,255,0.18);
+        }
+
+        /* OPÇÕES */
+        .options{
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+            font-size:13px;
+            margin-bottom:20px;
+            color:#fff;
+        }
+
+        .options label{
+            display:flex;
+            align-items:center;
+            gap:5px;
+        }
+
+        .options a{
+            color:#fff;
+            text-decoration:none;
+            transition:0.3s;
+        }
+
+        .options a:hover{
+            text-decoration:underline;
+        }
+
+        /* BOTÃO */
+        .login-container button{
+            width:100%;
+            padding:14px;
+
+            border:none;
+            border-radius:30px;
+
+            background:white;
+            color:#000;
+
+            font-weight:bold;
+            font-size:15px;
+
+            cursor:pointer;
+            transition:0.3s;
+        }
+
+        .login-container button:hover{
+            background:#dfe9ff;
+            transform:translateY(-2px);
+        }
+
+        /* REGISTER */
+        .register{
+            margin-top:20px;
+            font-size:14px;
+            color:#fff;
+        }
+
+        .register a{
+            color:#fff;
+            text-decoration:none;
+            font-weight:bold;
+        }
+
+        .register a:hover{
+            text-decoration:underline;
+        }
+
+    </style>
+</head>
+
+<body>
+
+<div class="login-container">
+    <h2>Login</h2>
+
+    <form method="POST">
+
+        <input name="user" type="text" placeholder="Usuário" required>
+
+        <input name="senha" type="password" placeholder="Senha" required>
+
+        <div class="options">
+            <label>
+                <input type="checkbox">
+                Remember me
+            </label>
+
+            <a href="#">Forgot password?</a>
+        </div>
+
+        <button type="submit">Entrar</button>
+
+        <div class="register">
+            Don't have an account?
+            <a href="#">Register</a>
+        </div>
+
+    </form>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload</title>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='index.css') }}">
+
+    <style>
+        /* RESET */
+        *{
+            margin:0;
+            padding:0;
+            box-sizing:border-box;
+            font-family:'Segoe UI', Arial, sans-serif;
+        }
+
+        body{
+            height:100vh;
+            display:flex;
+            justify-content:center;
+            align-items:center;
+
+            background:url('https://i.postimg.cc/htvQyZ5B/Green-and-White-Modern-Agriculture-Presentation.png') no-repeat center center/cover;
+
+            position:relative;
+            overflow:hidden;
+        }
+
+        /* OVERLAY */
+        body::before{
+            content:"";
+            position:absolute;
+            inset:0;
+            background:rgba(0,0,0,0.35);
+        }
+
+        /* CONTAINER */
+        .upload-container{
+            position:relative;
+            z-index:1;
+
+            width:400px;
+            padding:35px 30px;
+
+            border-radius:20px;
+
+            background:rgba(255,255,255,0.08);
+            border:1px solid rgba(255,255,255,0.2);
+
+            backdrop-filter:blur(12px);
+            -webkit-backdrop-filter:blur(12px);
+
+            box-shadow:0 8px 32px rgba(0,0,0,0.3);
+
+            text-align:center;
+            color:white;
+        }
+
+        .upload-container h2{
+            margin-bottom:25px;
+            font-size:32px;
+            color:#fff;
+        }
+
+        /* FORM */
+        .upload-form{
+            display:flex;
+            flex-direction:column;
+            gap:15px;
+        }
+
+        /* INPUT FILE */
+        .upload-form input[type="file"]{
+            padding:12px;
+            border-radius:12px;
+
+            background:rgba(255,255,255,0.12);
+            border:1px solid rgba(255,255,255,0.2);
+
+            color:white;
+            cursor:pointer;
+        }
+
+        .upload-form input[type="file"]::file-selector-button{
+            padding:10px 15px;
+            border:none;
+            border-radius:8px;
+            background:white;
+            color:#000;
+            font-weight:bold;
+            cursor:pointer;
+            margin-right:10px;
+            transition:0.3s;
+        }
+
+        .upload-form input[type="file"]::file-selector-button:hover{
+            background:#dfe9ff;
+        }
+
+        /* BOTÕES */
+        .upload-form button,
+        .btn-reset{
+            width:100%;
+            padding:14px;
+
+            border:none;
+            border-radius:30px;
+
+            font-size:15px;
+            font-weight:bold;
+
+            cursor:pointer;
+            transition:0.3s;
+        }
+
+        .upload-form button{
+            background:white;
+            color:#000;
+        }
+
+        .upload-form button:hover{
+            background:#dfe9ff;
+            transform:translateY(-2px);
+        }
+
+        /* RESET */
+        .btn-reset{
+            background:#ff4757;
+            color:white;
+            margin-top:15px;
+        }
+
+        .btn-reset:hover{
+            background:#e84118;
+            transform:translateY(-2px);
+        }
+
+        /* VOLTAR */
+        .btn-voltar{
+            display:inline-block;
+            margin-top:20px;
+
+            color:white;
+            text-decoration:none;
+            font-size:14px;
+
+            transition:0.3s;
+        }
+
+        .btn-voltar:hover{
+            text-decoration:underline;
+        }
+
+    </style>
+</head>
+
+<body>
+
+<div class="upload-container">
+
+    <h2>Upload de Excel</h2>
+
+    <form method="POST" enctype="multipart/form-data" class="upload-form">
+
+        <input type="file" name="file" required>
+
+        <button type="submit">Enviar</button>
+
+    </form>
+
+    <form method="POST" action="/reset"
+          onsubmit="return confirm('Tem certeza que deseja apagar TODOS os dados?')">
+
+        <button type="submit" class="btn-reset">
+            Atualizar Dados
+        </button>
+
+    </form>
+
+    <a href="/" class="btn-voltar">
+        ← Voltar
+    </a>
+
+</div>
+
+</body>
+</html>
